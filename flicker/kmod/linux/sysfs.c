@@ -73,7 +73,8 @@ int flicker_sysfs_data_state;
 
 /* TODO: We should probably print this in its raw form, and let other
    programs parse it. */
-static ssize_t data_read(struct kobject *kobj,
+static ssize_t data_read(struct file *f,
+                         struct kobject *kobj,
                          struct bin_attribute *binattr,
                          char *buf, loff_t pos,
                          size_t count) {
@@ -97,7 +98,8 @@ static ssize_t data_read(struct kobject *kobj,
 }
 
 /* better consume all available bytes, or call will recur forever*/
-static ssize_t data_write(struct kobject *kobj,
+static ssize_t data_write(struct file *f,
+                          struct kobject *kobj,
                           struct bin_attribute *binattr,
                           char *buf, loff_t pos,
                           size_t count)
