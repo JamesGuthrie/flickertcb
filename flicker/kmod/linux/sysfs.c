@@ -36,7 +36,7 @@
 #include "flicker.h"
 #include "sysfs.h"
 #include "acmod.h"
-//#include "acpi.h" /* for acpi_dump */
+#include "acpi.h" /* for dbg_acpi_dump() */
 #include "log.h"
 
 /* globals declared in flickermod.c */
@@ -205,8 +205,8 @@ control_store(struct kobject *kobj, struct kobj_attribute *attr,
                 flicker_sysfs_data_state = IDLE;
                 break;
             case 'd':
-                dbg("ACPI debug dump DISABLED");
-                //acpi_dump(); /* in acpi.c */
+                dbg("ACPI debug dump");
+                dbg_acpi_dump(); /* in acpi.c */
                 break;
      default:
                 logit("Unknown command %08x, count %08x", buf[0] & 0xff, count);

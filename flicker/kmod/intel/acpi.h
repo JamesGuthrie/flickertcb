@@ -515,6 +515,9 @@ extern struct acpi_mcfg *get_acpi_mcfg_table(void);
 extern void disable_smis(void);
 
 
+/* Debugging function: */
+extern void dbg_acpi_dump(void);
+
 #endif    /* __ACPI_H__ */
 
 /*

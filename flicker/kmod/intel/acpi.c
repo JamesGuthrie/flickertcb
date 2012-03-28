@@ -449,6 +449,95 @@ struct acpi_mcfg *get_acpi_mcfg_table(void)
 /*     } */
 /* } */
 
+
+
+/**
+ * Trying to ensure that DMA protection is fully disabled upon
+ * completion of a Flicker session.  To that end dumping DMAR
+ * information is useful.
+ */
+
+/* DMA Remapping Registers */
+
+typedef struct __attribute__ ((packed)) {
+    uint32_t version;
+    uint32_t reserved;
+    uint64_t capabilities;
+    uint64_t ext_capabilities;
+    uint32_t globcmd;
+    uint32_t globsts;
+    uint64_t rootentry;
+    uint64_t ctxcmd;
+    uint32_t reserved2;
+    uint32_t faultsts;
+    uint32_t faultevtctrl;
+    uint32_t faultevtdata;
+    uint32_t faultevtaddr;
+    uint32_t faultevtuadd;
+    uint64_t reserved3[2];
+    uint64_t advfaultlog;
+    uint32_t reserved4;
+    uint32_t pmr_enable;
+    uint32_t pmr_low_base;   /* 32 bits */
+    uint32_t pmr_low_limit;  /* 32 bits */
+    uint64_t pmr_high_base;  /* 64 bits */
+    uint64_t pmr_high_limit; /* 64 bits */
+} dmarr_t;
+
+/* Print some of the DMAR DRHD registers starting from reg_base */
+static void print_drhd_reg(uint64_t dmarr_base) {
+    uint32_t dmarr_base_32 = (uint32_t)dmarr_base;
+    dmarr_t *dmarr = (dmarr_t *)dmarr_base_32;
+    if(!dmarr) return;
+
+    dump_bytes((unsigned char *)dmarr, 128);
+
+    logit("\t\tDMAR DRHD Registers @ %p:\n", dmarr);
+    logit("\t\t\tVersion: 0x%x\n", dmarr->version);
+    logit("\t\t\tCapability Register: 0x%Lx\n", dmarr->capabilities);
+    logit("\t\t\tExt Capability Register: 0x%Lx\n", dmarr->ext_capabilities);
+    logit("\t\t\tGlobal Command: 0x%x\n", dmarr->globcmd);
+    logit("\t\t\tGlobal Status: 0x%x\n", dmarr->globsts);
+    logit("\t\t\tRoot Entry: 0x%Lx\n", dmarr->rootentry);
+    logit("\t\t\tContext Command: 0x%Lx\n", dmarr->ctxcmd);
+    logit("\t\t\tFault Status 0x%x\n", dmarr->faultsts);
+    logit("\t\t\tFault Event Control 0x%x\n", dmarr->faultevtctrl);
+    logit("\t\t\tFault Event Data 0x%x\n", dmarr->faultevtdata);
+    logit("\t\t\tFault Event Address 0x%x\n", dmarr->faultevtaddr);
+    logit("\t\t\tFault Event Upper Address 0x%x\n", dmarr->faultevtuadd);
+    logit("\t\t\tAdv Fault Log: 0x%Lx\n", dmarr->advfaultlog);
+    logit("\t\t\tPMR Enable: 0x%x\n", dmarr->pmr_enable);
+    logit("\t\t\tPMR Low Base: 0x%x\n", dmarr->pmr_low_base);
+    logit("\t\t\tPMR Low Limit: 0x%x\n", dmarr->pmr_low_limit);
+    logit("\t\t\tPMR High Base: 0x%Lx\n", dmarr->pmr_high_base);
+    logit("\t\t\tPMR High Limit: 0x%Lx\n", dmarr->pmr_high_limit);
+
+    if(dmarr->pmr_enable != 0) {
+        logit("FOUND NON-ZERO DMAR_PMEN; zeroing it...");
+        dmarr->pmr_enable = 0;
+        logit("done.\n");
+    }
+}
+
+
+void dbg_acpi_dump(void) {
+    uint32_t fed9 = 0xfed90000;
+    uint32_t fed9_io;
+    uint32_t offset;
+
+    if(!(fed9_io = (uint32_t)ioremap(fed9, 5*0x1000))) {
+        logit("ERROR with ioremap\n");
+        return;
+    }
+
+    /* 0xfed9000 -> 0xfed93000 */
+    for(offset = 0; offset < 0x4000; offset += 0x1000) {
+        print_drhd_reg(fed9_io+offset);
+    }
+
+    iounmap((void*)fed9_io);
+}
+
 /*
  * Local variables:
  * mode: C
