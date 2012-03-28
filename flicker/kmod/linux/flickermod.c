@@ -90,7 +90,9 @@ static int do_allocations(void) {
     dbg("PAGE_SIZE = 0x%08lx (%ld)", PAGE_SIZE, PAGE_SIZE);
     dbg("sizeof(pal_t)= 0x%08x (%d)", sizeof(pal_t), sizeof(pal_t));
 
-    g_pal_region = kmalloc(needed_alloc_size, GFP_KERNEL);
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+    /* 2MB requirement to match up with DMAR PMR's */    
+    g_pal_region = kmalloc(MAX(needed_alloc_size, 2*1024*1024), GFP_KERNEL);
 
     if(g_pal_region == NULL) {
         error("alloc of %d bytes failed!", needed_alloc_size);
