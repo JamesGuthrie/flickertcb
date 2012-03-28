@@ -91,11 +91,19 @@ static int do_allocations(void) {
     dbg("sizeof(pal_t)= 0x%08x (%d)", sizeof(pal_t), sizeof(pal_t));
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define IS_2MB_ALIGNED(x) (((x) & 0x1fffff) == 0)
     /* 2MB requirement to match up with DMAR PMR's */    
     g_pal_region = kmalloc(MAX(needed_alloc_size, 2*1024*1024), GFP_KERNEL);
 
     if(g_pal_region == NULL) {
         error("alloc of %d bytes failed!", needed_alloc_size);
+        if(g_acmod) { kfree(g_acmod); g_acmod = NULL; }
+        return -ENOMEM;
+    }
+
+    if(!IS_2MB_ALIGNED((uint32_t)g_pal_region)) {
+        error("g_pal_region (%p) allocation NOT 2MB aligned!", g_pal_region);
+        if(g_pal_region) { kfree(g_pal_region); g_pal_region = NULL; }
         if(g_acmod) { kfree(g_acmod); g_acmod = NULL; }
         return -ENOMEM;
     }
