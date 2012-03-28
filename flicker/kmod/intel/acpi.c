@@ -492,30 +492,84 @@ static void print_drhd_reg(uint64_t dmarr_base) {
 
     dump_bytes((unsigned char *)dmarr, 128);
 
-    logit("\t\tDMAR DRHD Registers @ %p:\n", dmarr);
-    logit("\t\t\tVersion: 0x%x\n", dmarr->version);
-    logit("\t\t\tCapability Register: 0x%Lx\n", dmarr->capabilities);
-    logit("\t\t\tExt Capability Register: 0x%Lx\n", dmarr->ext_capabilities);
-    logit("\t\t\tGlobal Command: 0x%x\n", dmarr->globcmd);
-    logit("\t\t\tGlobal Status: 0x%x\n", dmarr->globsts);
-    logit("\t\t\tRoot Entry: 0x%Lx\n", dmarr->rootentry);
-    logit("\t\t\tContext Command: 0x%Lx\n", dmarr->ctxcmd);
-    logit("\t\t\tFault Status 0x%x\n", dmarr->faultsts);
-    logit("\t\t\tFault Event Control 0x%x\n", dmarr->faultevtctrl);
-    logit("\t\t\tFault Event Data 0x%x\n", dmarr->faultevtdata);
-    logit("\t\t\tFault Event Address 0x%x\n", dmarr->faultevtaddr);
-    logit("\t\t\tFault Event Upper Address 0x%x\n", dmarr->faultevtuadd);
-    logit("\t\t\tAdv Fault Log: 0x%Lx\n", dmarr->advfaultlog);
-    logit("\t\t\tPMR Enable: 0x%x\n", dmarr->pmr_enable);
-    logit("\t\t\tPMR Low Base: 0x%x\n", dmarr->pmr_low_base);
-    logit("\t\t\tPMR Low Limit: 0x%x\n", dmarr->pmr_low_limit);
-    logit("\t\t\tPMR High Base: 0x%Lx\n", dmarr->pmr_high_base);
-    logit("\t\t\tPMR High Limit: 0x%Lx\n", dmarr->pmr_high_limit);
+    logit("\tDMAR DRHD Registers @ %p:", dmarr);
+    logit("\t\tVersion: 0x%x", dmarr->version);
+    logit("\t\tCapability Register: 0x%Lx", dmarr->capabilities);
+
+    /* Sec 10.4.2 "Capability Register" in Intel VT-d spec */
+    logit("\t\t\tDRD 55 (DMA Read Draining): %s",
+          dmarr->capabilities & (1ULL<<55) ? "true" : "false");
+    logit("\t\t\tDWD 54 (DMA Write Draining): %s",
+          dmarr->capabilities & (1ULL<<54) ? "true" : "false");
+    logit("\t\t\tMAMV 53:48 (Max Addr Mask Value): %02Lx",
+          (dmarr->capabilities >> 48) & 0x3f);
+    logit("\t\t\tNFR 47:40 (Num Fault Recording Regs): %02Lx",
+          (dmarr->capabilities >> 40) & 0xff);
+    logit("\t\t\tPSI 39 (Page Selective Invalidation): %s",
+          dmarr->capabilities & (1ULL<<39) ? "true" : "false");
+    logit("\t\t\tSPS 37:34 (Super Page Support): %02Lx",
+          (dmarr->capabilities >> 34) & 0x1f);
+    logit("\t\t\tFRO 33:24 (Fault Recording Offset): %03Lx",
+          (dmarr->capabilities >> 24) & 0x3ff);
+    logit("\t\t\tISOCH 23 (Isochrony): %s",
+          dmarr->capabilities & (1ULL<<23) ? "true" : "false");
+    logit("\t\t\tZLR 22 (Zero Length Read): %s",
+          dmarr->capabilities & (1ULL<<22) ? "true" : "false");
+    logit("\t\t\tMGAW 21:16 (Max Guest Addr Width): %02Lx",
+          (dmarr->capabilities >> 16) & 0x3f);
+    logit("\t\t\tSAGAW 12:8 (Supported Adjusted Guest Addr Width): %02Lx",
+          (dmarr->capabilities >> 8) & 0x1f);
+    logit("\t\t\tCM 7 (Caching Mode): %s",
+          dmarr->capabilities & (1<<7) ? "true" : "false");
+    logit("\t\t\tPHMR 6 (Prot High Mem Region): %s",
+          dmarr->capabilities & (1<<6) ? "true" : "false");
+    logit("\t\t\tPLMR 5 (Prot Low Mem Region): %s",
+          dmarr->capabilities & (1ULL<<5) ? "true" : "false");
+    logit("\t\t\tRWBF 4 (Required Write-Buffer Flushing): %s",
+          dmarr->capabilities & (1ULL<<4) ? "true" : "false");
+    logit("\t\t\tAFL 3 (Advanced Fault Logging): %s",
+          dmarr->capabilities & (1ULL<<3) ? "true" : "false");
+    logit("\t\t\tND 2:0 (Number of Domains Supported): %01Lx",
+          dmarr->capabilities & 0x7);
+    logit("\t\tExt Capability Register: 0x%Lx", dmarr->ext_capabilities);
+    logit("\t\t\tMHMV 23:20 (Max Handle Mask Value): %01Lx",
+          (dmarr->ext_capabilities >> 20) & 0xf);
+    logit("\t\t\tIRO 17:8 (IOTLB Register Offset): %03Lx",
+          (dmarr->ext_capabilities >> 8) & 0x3ff);
+    logit("\t\t\tSC 7 (Snoop Control): %s",
+          dmarr->ext_capabilities & (1ULL<<7) ? "true" : "false");
+    logit("\t\t\tPT 6 (Pass Through): %s",
+          dmarr->ext_capabilities & (1ULL<<6) ? "true" : "false");
+    logit("\t\t\tEIM 4 (Extended Interrupt Mode): %s",
+          dmarr->ext_capabilities & (1ULL<<4) ? "true" : "false");
+    logit("\t\t\tIR 3 (Interrupt Remapping Support): %s",
+          dmarr->ext_capabilities & (1ULL<<3) ? "true" : "false");
+    logit("\t\t\tDI 2 (Device IOTLB Support): %s",
+          dmarr->ext_capabilities & (1ULL<<2) ? "true" : "false");
+    logit("\t\t\tQI 1 (Queued Invalidation Support): %s",
+          dmarr->ext_capabilities & (1ULL<<1) ? "true" : "false");
+    logit("\t\t\tC 0 (Coherency): %s",
+          dmarr->ext_capabilities & 1ULL ? "true" : "false");
+    logit("\t\tGlobal Command: 0x%x", dmarr->globcmd);
+    logit("\t\tGlobal Status: 0x%x", dmarr->globsts);
+    logit("\t\tRoot Entry: 0x%Lx", dmarr->rootentry);
+    logit("\t\tContext Command: 0x%Lx", dmarr->ctxcmd);
+    logit("\t\tFault Status 0x%x", dmarr->faultsts);
+    logit("\t\tFault Event Control 0x%x", dmarr->faultevtctrl);
+    logit("\t\tFault Event Data 0x%x", dmarr->faultevtdata);
+    logit("\t\tFault Event Address 0x%x", dmarr->faultevtaddr);
+    logit("\t\tFault Event Upper Address 0x%x", dmarr->faultevtuadd);
+    logit("\t\tAdv Fault Log: 0x%Lx", dmarr->advfaultlog);
+    logit("\t\tPMR Enable: 0x%x", dmarr->pmr_enable);
+    logit("\t\tPMR Low Base: 0x%x", dmarr->pmr_low_base);
+    logit("\t\tPMR Low Limit: 0x%x", dmarr->pmr_low_limit);
+    logit("\t\tPMR High Base: 0x%Lx", dmarr->pmr_high_base);
+    logit("\t\tPMR High Limit: 0x%Lx", dmarr->pmr_high_limit);
 
     if(dmarr->pmr_enable != 0) {
         logit("FOUND NON-ZERO DMAR_PMEN; zeroing it...");
         dmarr->pmr_enable = 0;
-        logit("done.\n");
+        logit("done.");
     }
 }
 
@@ -526,7 +580,7 @@ void dbg_acpi_dump(void) {
     uint32_t offset;
 
     if(!(fed9_io = (uint32_t)ioremap(fed9, 5*0x1000))) {
-        logit("ERROR with ioremap\n");
+        logit("ERROR with ioremap");
         return;
     }
 
