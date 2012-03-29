@@ -514,9 +514,12 @@ extern struct acpi_table_ioapic *get_acpi_ioapic_table(void);
 extern struct acpi_mcfg *get_acpi_mcfg_table(void);
 extern void disable_smis(void);
 
+int init_vtd_dmar_ioremappings(void);
+int cleanup_vtd_dmar_ioremappings(void);
+int disable_vtd_pmr(void);
 
 /* Debugging function: */
-extern void dbg_acpi_dump(void);
+void dbg_acpi_dump(void);
 
 #endif    /* __ACPI_H__ */
 

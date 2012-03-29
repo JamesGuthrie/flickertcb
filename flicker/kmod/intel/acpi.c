@@ -46,6 +46,7 @@
 
 #include "acpi.h"
 #include "log.h"
+#include "io.h"
 
 bool g_no_usb = true;
 
@@ -573,23 +574,68 @@ static void print_drhd_reg(uint64_t dmarr_base) {
     }
 }
 
+/**
+ * Goal: perform an ioremap of the VT-d DMAR memory-mapped address
+ * region so that the VT-d PMR ranges can be disabled.  We do this
+ * once here at the beginning because we want to disable the VT-d PMRs
+ * after a Flicker session completes, and we don't want to call the
+ * ioremap facilities with interrupts disabled, etc.  Also, for
+ * efficiency.  No sense in doing the same work multiple times.
+ *
+ * FIXME: This is pretty hideous.  Better to use OS's existing ACPI
+ * mechanisms to find the DMAR memory regions (e.g., see
+ * intel-iommu.[ch] in the Linux kernel tree).  For the moment we're
+ * going the quick-and-dirty route so we can first see if it's
+ * worthwhile to invest the energy to "do it right".
+ *
+ * TODO: Make this work on Windows too.
+ * TODO: Figure out what issues exist on AMD systems, and devise a
+ * similar work-around.
+ */
+#define DMAR_NUM_PAGES 5 /* number of 4KB pages */
+static uint32_t sg_dmar_base_io = 0;
+
+int init_vtd_dmar_ioremappings(void) {
+    uint32_t fed9 = 0xfed90000; /* XXX */
+
+    if(!(sg_dmar_base_io = (uint32_t)f_ioremap(fed9, DMAR_NUM_PAGES*0x1000))) {
+        logit("ERROR with ioremap");
+        return -ENOMEM;
+    }
+
+    return 0; /* success */
+}
+
+/* This needs to be safe to call even if init_vtd_dmar_ioremappings()
+ * was never called, e.g., on an AMD system. */
+int cleanup_vtd_dmar_ioremappings(void) {
+    if(sg_dmar_base_io) {
+        f_iounmap((void*)sg_dmar_base_io, DMAR_NUM_PAGES*0x1000);
+        sg_dmar_base_io = 0;
+    }
+    return 0; /* success */
+}
+
+int disable_vtd_pmr(void) {
+    if(!sg_dmar_base_io) {
+        return -ENOMEM;
+    }
+
+    /* Implement Me! */
+
+    return 0; /* success */
+}
 
 void dbg_acpi_dump(void) {
-    uint32_t fed9 = 0xfed90000;
-    uint32_t fed9_io;
     uint32_t offset;
 
-    if(!(fed9_io = (uint32_t)ioremap(fed9, 5*0x1000))) {
-        logit("ERROR with ioremap");
-        return;
+    if(sg_dmar_base_io) {
+        /* 0xfed9000 -> 0xfed93000 */
+        /* TODO: use DMAR_NUM_PAGES */
+        for(offset = 0; offset < 0x4000; offset += 0x1000) {
+            print_drhd_reg(sg_dmar_base_io+offset);
+        }
     }
-
-    /* 0xfed9000 -> 0xfed93000 */
-    for(offset = 0; offset < 0x4000; offset += 0x1000) {
-        print_drhd_reg(fed9_io+offset);
-    }
-
-    iounmap((void*)fed9_io);
 }
 
 /*

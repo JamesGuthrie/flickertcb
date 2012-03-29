@@ -32,6 +32,7 @@
 #include "txt.h"
 #include "mtrrs.h"
 #include "svm.h"
+#include "acpi.h"
 
 /* region of memory to hold saved mtrrs and other kernel-restored cpu
  * state. Accessed here and in intel/txt.c. */
@@ -181,6 +182,12 @@ static int __init init_flicker(void)
           error("Intel Platform that does not support TXT extensions.");
           return rv;
       }
+
+      rv = init_vtd_dmar_ioremappings();
+      if (0 != rv) {
+          error("Unable to allocate ioremappings for VT-d.");
+          return rv;
+      }
   } else {
       /* On AMD, we need to clear the Microcode on all CPUs. This
        * introduces the requirement that this module is loaded before
@@ -214,11 +221,15 @@ static void __exit cleanup_flicker(void)
 
   free_allocations();
 
-    /* Check the MTRRs before we leave */
-    if ( !validate_mtrrs(&(kcpu_region.saved_mtrr_state)) ) {
-       dbg("MTRRs failed validation");
-    }
+  /* Check the MTRRs before we leave */
+  if ( !validate_mtrrs(&(kcpu_region.saved_mtrr_state)) ) {
+    dbg("MTRRs failed validation");
+  }
 
+  if(0 != cleanup_vtd_dmar_ioremappings()) {
+      error("Error in cleanup_vtd_dmar_ioremappings()");
+  }
+  
   logit("Flicker module unloaded.");
 }
 
