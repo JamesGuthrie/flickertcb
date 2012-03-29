@@ -1,7 +1,7 @@
 /*
  * Flicker for AMD SVM and Intel TXT, 32-bit non-PAE Linux and Windows.
  *
- * Copyright (C) 2006 - 2011 Jonathan McCune (jonmccune@cmu.edu),
+ * Copyright (C) 2006 - 2012 Jonathan McCune (jonmccune@cmu.edu),
  * Bryan Parno, Adrian Perrig, Michael K. Reiter
  *
  * Redistribution and use in source and binary forms, with or without
@@ -322,3 +322,13 @@ flicker-0.5:
   - in-memory logging for systems with no serial port
   - single unified kernel module and PAL codebase that is processor-agnostic.
   - compatible with most distributions' shipped non-PAE 32-bit Linux kernel builds
+flicker-0.51 (alpha release for internal testing):
+  - changes exclusively to Linux x Intel. Linux x AMD unchanged,
+    Windows probably will not even build.
+  - minor tweak to sysfs code to keep pace with Linux-internal APIs
+  - modify Linux kmalloc() invocations to always be 2MB-aligned for PAL
+  - add support to debug Intel VT-d DMAR configuration information
+  - add support to explicitly disable VT-d DMAR PMR facility
+  - invoke disable_vtd_pmr() immediately following Flicker session,
+    before restoring interrupts
+
