@@ -47,6 +47,8 @@ static void *g_pal_region = NULL;
 #define MODULE_NAME "flicker"
 
 static int do_allocations(void) {
+    int retries = 5; /* kmalloc() has to work hard for contiguous
+                        memory, and may need to try more than once. */
     uint32_t needed_alloc_size = sizeof(pal_t);
 
     assert(NULL == g_pal_region);
@@ -92,11 +94,18 @@ static int do_allocations(void) {
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define IS_2MB_ALIGNED(x) (((x) & 0x1fffff) == 0)
+#define ALIGN_UP_2MB(x) (((x) & (~0x1fffff)) + 0x200000)
     /* 2MB requirement to match up with DMAR PMR's */    
-    g_pal_region = kmalloc(MAX(needed_alloc_size, 2*1024*1024), GFP_KERNEL);
+    needed_alloc_size = ALIGN_UP_2MB(needed_alloc_size);
+    g_pal_region = NULL;
+    do {
+        dbg("attempting kmalloc of %d (0x%x) bytes for g_pal_region",
+            needed_alloc_size, needed_alloc_size);
+        g_pal_region = kmalloc(needed_alloc_size, GFP_KERNEL);
+    } while((NULL == g_pal_region) && (retries-- > 0));
 
-    if(g_pal_region == NULL) {
-        error("alloc of %d bytes failed!", needed_alloc_size);
+    if(g_pal_region == NULL) { /* will also detect failure from retries */
+        error("kmalloc of %d bytes failed!", needed_alloc_size);
         if(g_acmod) { kfree(g_acmod); g_acmod = NULL; }
         return -ENOMEM;
     }
