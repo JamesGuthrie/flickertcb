@@ -75,7 +75,9 @@ echo -n G > $SYSFSPATH/control
 echo "Retrieving outputs from Flicker session:"
 cat $SYSFSPATH/data | hd
 
-rmmod flicker
+# Enable this if you're making changes to the Flicker kernel
+# module. Otherwise it is better to only install the module once.
+#rmmod flicker
 
 PCRS=`find /sys -name pcrs`
 if [ ! -z $PCRS ]
