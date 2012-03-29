@@ -622,9 +622,7 @@ int disable_vtd_pmr(void) {
         dmarr = (dmarr_t*)(sg_dmar_base_io+offset*0x1000);
 
         if(dmarr->pmr_enable != 0) {
-            dbg("FOUND NON-ZERO DMAR_PMEN; zeroing it...");
             dmarr->pmr_enable = 0;
-            dbg("done.");
         }
     }
     return 0; /* success */

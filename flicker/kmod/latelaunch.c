@@ -33,6 +33,7 @@
 #include "svm.h"
 #include "io.h"
 #include "smx.h"
+#include "acpi.h" /* disable_vtd_pmr() */
 
 #ifdef _WIN32
 #include "msr.h"
@@ -940,6 +941,7 @@ void amd_do_skinit(void) {
 int launch_drtm(void) {
     if(get_cpu_vendor() == CPU_VENDOR_INTEL) {
         launch_senter();
+        disable_vtd_pmr();
     } else {
         amd_do_skinit();
     }
