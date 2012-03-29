@@ -566,12 +566,6 @@ static void print_drhd_reg(uint64_t dmarr_base) {
     logit("\t\tPMR Low Limit: 0x%x", dmarr->pmr_low_limit);
     logit("\t\tPMR High Base: 0x%Lx", dmarr->pmr_high_base);
     logit("\t\tPMR High Limit: 0x%Lx", dmarr->pmr_high_limit);
-
-    if(dmarr->pmr_enable != 0) {
-        logit("FOUND NON-ZERO DMAR_PMEN; zeroing it...");
-        dmarr->pmr_enable = 0;
-        logit("done.");
-    }
 }
 
 /**
@@ -592,13 +586,12 @@ static void print_drhd_reg(uint64_t dmarr_base) {
  * TODO: Figure out what issues exist on AMD systems, and devise a
  * similar work-around.
  */
-#define DMAR_NUM_PAGES 5 /* number of 4KB pages */
+#define DMAR_NUM_PAGES 4 /* number of 4KB pages */
+#define DMAR_BASE_PHYS 0xfed90000
 static uint32_t sg_dmar_base_io = 0;
 
 int init_vtd_dmar_ioremappings(void) {
-    uint32_t fed9 = 0xfed90000; /* XXX */
-
-    if(!(sg_dmar_base_io = (uint32_t)f_ioremap(fed9, DMAR_NUM_PAGES*0x1000))) {
+    if(!(sg_dmar_base_io = (uint32_t)f_ioremap(DMAR_BASE_PHYS, (DMAR_NUM_PAGES+1)*0x1000))) {
         logit("ERROR with ioremap");
         return -ENOMEM;
     }
@@ -610,19 +603,30 @@ int init_vtd_dmar_ioremappings(void) {
  * was never called, e.g., on an AMD system. */
 int cleanup_vtd_dmar_ioremappings(void) {
     if(sg_dmar_base_io) {
-        f_iounmap((void*)sg_dmar_base_io, DMAR_NUM_PAGES*0x1000);
+        f_iounmap((void*)sg_dmar_base_io, (DMAR_NUM_PAGES+1)*0x1000);
         sg_dmar_base_io = 0;
     }
     return 0; /* success */
 }
 
 int disable_vtd_pmr(void) {
+    uint32_t offset;
+    dmarr_t *dmarr;
+
     if(!sg_dmar_base_io) {
         return -ENOMEM;
     }
 
-    /* Implement Me! */
+    /* 0xfed9000 -> 0xfed93000 */
+    for(offset = 0; offset < DMAR_NUM_PAGES; offset++) {
+        dmarr = (dmarr_t*)(sg_dmar_base_io+offset*0x1000);
 
+        if(dmarr->pmr_enable != 0) {
+            dbg("FOUND NON-ZERO DMAR_PMEN; zeroing it...");
+            dmarr->pmr_enable = 0;
+            dbg("done.");
+        }
+    }
     return 0; /* success */
 }
 
@@ -631,9 +635,8 @@ void dbg_acpi_dump(void) {
 
     if(sg_dmar_base_io) {
         /* 0xfed9000 -> 0xfed93000 */
-        /* TODO: use DMAR_NUM_PAGES */
-        for(offset = 0; offset < 0x4000; offset += 0x1000) {
-            print_drhd_reg(sg_dmar_base_io+offset);
+        for(offset = 0; offset < DMAR_NUM_PAGES; offset++) {
+            print_drhd_reg(sg_dmar_base_io+offset*0x1000);
         }
     }
 }
