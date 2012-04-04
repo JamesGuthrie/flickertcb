@@ -172,7 +172,7 @@ static inline txt_heap_t *get_txt_heap(void)
 static inline uint64_t get_txt_heap_size(void)
 {
     uint64_t heap_size;
-    heap_size = read_priv_config_reg(TXTCR_HEAP_SIZE);
+    heap_size = read_pub_config_reg(TXTCR_HEAP_SIZE);
     if(heap_size <= MIN_TXT_HEAP_SIZE ||
        heap_size > MAX_TXT_HEAP_SIZE) {
         error("WARNING: TXTCR_HEAP_SIZE contains strange value: %016llx; using %08x instead.\n",
