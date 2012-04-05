@@ -11,6 +11,7 @@
     #include <linux/sysfs.h>
     #include <linux/types.h>
     #include <linux/slab.h>
+    #include <linux/delay.h> /* mdelay() */
 #else // _WiN32
     #include "ntddk.h"
     #include "wintypes.h"
