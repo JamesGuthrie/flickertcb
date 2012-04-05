@@ -938,10 +938,13 @@ void amd_do_skinit(void) {
  * END AMD-SPECIFIC FUNCTIONS
  */
 
+int linux_intel_disable_pmr(void); /* XXX Experimental hack! */
+
 int launch_drtm(void) {
     if(get_cpu_vendor() == CPU_VENDOR_INTEL) {
         launch_senter();
-        disable_vtd_pmr();
+        //disable_vtd_pmr();
+        linux_intel_disable_pmr();
     } else {
         amd_do_skinit();
     }
