@@ -24,6 +24,7 @@ flicker-y += intel/acpi.o
 flicker-y += intel/errors.o
 flicker-y += intel/txt.o
 flicker-y += intel/acmod.o
+flicker-y += intel/iommu.o
 
 flicker-y += amd/svm.o
 

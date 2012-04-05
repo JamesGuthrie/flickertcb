@@ -36,6 +36,10 @@
 #ifndef _WIN32
 #include <linux/module.h>
 #include <linux/dmar.h>
+#include <linux/list.h>
+#include <linux/intel-iommu.h>
+#include <linux/kallsyms.h> /* kallsyms_lookup_name(); Yikes! */
+#include <asm/io.h> /* virt_to_phys() */
 #else
 #error "Windows DMAR / IOMMU currently unsupported"
 #endif
@@ -46,11 +50,32 @@ int linux_drhd_iommu_dbg(void) {
     struct dmar_drhd_unit *drhd;
     struct intel_iommu *iommu = NULL;
 
-    for_each_active_iommu(iommu, drhd) {
-    }
+    /* This symbol is defined extern in dmar.h, but the actual
+    variable can't be found when the module is inserted because it's
+    not an exported symbol.  Do the hideous thing: use
+    kallsyms_lookup_name() */
+    struct list_head *dmar_drhd_units;
+
+    dmar_drhd_units = (struct list_head *)kallsyms_lookup_name("dmar_drhd_units");
+
+    dbg("Symbol dmar_drhd_units found at %p", dmar_drhd_units);
+
+    if(NULL == dmar_drhd_units) { return -ENODEV; }
     
-    for_each_iommu(iommu, drhd) {
+    /* Can't use for_each_active_iommu or for_each_iommu, because
+       dmar_drhd_units is expected to be a global, not a pointer. */
+    list_for_each_entry(drhd, dmar_drhd_units, list) {
+        iommu=drhd->iommu;
+        dbg("drhd found at %p, v2p %x", drhd, virt_to_phys(drhd));
+        dbg("drhd->reg_base_addr %Lx", drhd->reg_base_addr);
+        dbg("drhd->iommu found with value %p, v2p %x", iommu, virt_to_phys(iommu));
+        if(NULL != iommu && 0xffffffff != (uint32_t)iommu) {
+            dbg("iommu->reg  %p, v2p %x", iommu->reg, virt_to_phys(iommu->reg));
+            dbg("iommu->name %s", iommu->name);
+        }
     }
+
+    return 0; /* success */
 }
 
 /*

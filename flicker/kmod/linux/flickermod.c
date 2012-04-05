@@ -166,6 +166,8 @@ static void free_allocations(void) {
     }
 }
 
+int linux_drhd_iommu_dbg(void); /* XXX Experimental hack! */
+
 static int __init init_flicker(void)
 {
   int rv = 0;
@@ -210,6 +212,11 @@ static int __init init_flicker(void)
     free_allocations();
     return rv;
   }
+
+  /* XXX Experimental Hack! XXX */
+  /* Can we make use of Linux's existing facilities for accessing DRHD
+     and DMAR registers without having to reinvent the wheel? */
+  rv = linux_drhd_iommu_dbg();
 
   assert(0 == rv);
   return rv;
