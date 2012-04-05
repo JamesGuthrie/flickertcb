@@ -47,6 +47,15 @@
 #include "flicker.h"
 
 /**
+ * The "real" dmar_drhd_units symbol is defined extern in dmar.h,
+ * but the actual variable can't be found when the module is
+ * inserted because it's not an exported symbol.  Do the hideous
+ * thing: use kallsyms_lookup_name(). */
+static inline struct list_head * get_dmar_drhd_units(void) {
+    return (struct list_head *)kallsyms_lookup_name("dmar_drhd_units");
+}
+
+/**
  * Per section 10.4.16 in the Intel VT-d spec, the Protected Memory
  * Enable Register has two bits of interest.  The "Enable Protected
  * Memory (EPM)" bit, which controls the desired state of the PMRs,
@@ -63,15 +72,10 @@ int linux_intel_disable_pmr(void)
     int max_loop;
     int rv = 0;
     
-    /**
-     * The "real" dmar_drhd_units symbol is defined extern in dmar.h,
-     * but the actual variable can't be found when the module is
-     * inserted because it's not an exported symbol.  Do the hideous
-     * thing: use kallsyms_lookup_name(). */
     struct list_head *dmar_drhd_units;
     struct dmar_drhd_unit *drhd;
 
-    dmar_drhd_units = (struct list_head *)kallsyms_lookup_name("dmar_drhd_units");
+    dmar_drhd_units = get_dmar_drhd_units();
     //dbg("Symbol dmar_drhd_units found at %p", dmar_drhd_units);
     if(NULL == dmar_drhd_units) { return -ENODEV; }
 
@@ -99,8 +103,31 @@ int linux_intel_disable_pmr(void)
     return rv;    
 }
 
-int linux_drhd_iommu_dbg(void) {
-    return linux_intel_disable_pmr();
+
+/**
+ * Prints some debug information about VT-d DRHD.
+ */
+void linux_drhd_iommu_dbg(void) {
+    struct list_head *dmar_drhd_units;
+    struct dmar_drhd_unit *drhd;
+
+    dmar_drhd_units = get_dmar_drhd_units();
+    dbg("Symbol dmar_drhd_units found at %p", dmar_drhd_units);
+    if(NULL == dmar_drhd_units) { return; }
+
+    /* Can't use for_each_[active_]iommu, because dmar_drhd_units is
+       expected to be a global, not a pointer. */
+    list_for_each_entry(drhd, dmar_drhd_units, list) {        
+        dbg("drhd found at %p, v2p %x", drhd, virt_to_phys(drhd));
+        dbg("drhd->reg_base_addr %Lx", drhd->reg_base_addr);
+        dbg("drhd->iommu found with value %p, v2p %x", drhd->iommu,
+            virt_to_phys(drhd->iommu));
+        if(NULL != drhd->iommu && 0xffffffff != (uint32_t)drhd->iommu) {
+            dbg("drhd->iommu->reg  %p, v2p %x", drhd->iommu->reg,
+                virt_to_phys(drhd->iommu->reg));
+            dbg("drhd->iommu->name %s", drhd->iommu->name);
+        }
+    }
 }
 
 /*
