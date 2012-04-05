@@ -125,7 +125,7 @@ void linux_drhd_iommu_dbg(void) {
         if(NULL != drhd->iommu && 0xffffffff != (uint32_t)drhd->iommu) {
             dbg("drhd->iommu->reg  %p, v2p %x", drhd->iommu->reg,
                 virt_to_phys(drhd->iommu->reg));
-            dbg("drhd->iommu->name %s", drhd->iommu->name);
+            dbg("drhd->iommu->name \"%s\"", drhd->iommu->name);
         }
     }
 }

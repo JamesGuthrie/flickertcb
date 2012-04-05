@@ -167,6 +167,7 @@ static void free_allocations(void) {
 }
 
 int linux_intel_disable_pmr(void); /* XXX Experimental hack! */
+void linux_drhd_iommu_dbg(void); /* intel/iommu.c */
 
 static int __init init_flicker(void)
 {
@@ -194,6 +195,9 @@ static int __init init_flicker(void)
       /*     error("Unable to allocate ioremappings for VT-d."); */
       /*     return rv; */
       /* } */
+
+      /* Print some debug information about VT-d IOMMU, DRHD, PMRs */
+      linux_drhd_iommu_dbg();
   } else {
       /* On AMD, we need to clear the Microcode on all CPUs. This
        * introduces the requirement that this module is loaded before
@@ -216,11 +220,6 @@ static int __init init_flicker(void)
     free_allocations();
     return rv;
   }
-
-  /* XXX Experimental Hack! XXX */
-  /* Can we make use of Linux's existing facilities for accessing DRHD
-     and DMAR registers without having to reinvent the wheel? */
-  rv = linux_intel_disable_pmr();
 
   assert(0 == rv);
   return rv;
