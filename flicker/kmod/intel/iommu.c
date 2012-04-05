@@ -39,43 +39,68 @@
 #include <linux/list.h>
 #include <linux/intel-iommu.h>
 #include <linux/kallsyms.h> /* kallsyms_lookup_name(); Yikes! */
-#include <asm/io.h> /* virt_to_phys() */
+#include <asm/io.h> /* readl(), writel(), virt_to_phys() */
 #else
 #error "Windows DMAR / IOMMU currently unsupported"
 #endif
 
 #include "flicker.h"
 
-int linux_drhd_iommu_dbg(void) {
-    struct dmar_drhd_unit *drhd;
-    struct intel_iommu *iommu = NULL;
-
-    /* This symbol is defined extern in dmar.h, but the actual
-    variable can't be found when the module is inserted because it's
-    not an exported symbol.  Do the hideous thing: use
-    kallsyms_lookup_name() */
+/**
+ * Per section 10.4.16 in the Intel VT-d spec, the Protected Memory
+ * Enable Register has two bits of interest.  The "Enable Protected
+ * Memory (EPM)" bit, which controls the desired state of the PMRs,
+ * and the "Protected Region Status (PRS)" bit, which gives the
+ * region's status.
+ *
+ * The basic idea here is to disable the PMRs by clearing EPM, and
+ * then waiting until the PMRs are actually disabled, which is evident
+ * by observing that the PRS bit has also cleared.
+ */
+int linux_intel_disable_pmr(void)
+{
+    uint32_t pmen;
+    int max_loop;
+    int rv = 0;
+    
+    /**
+     * The "real" dmar_drhd_units symbol is defined extern in dmar.h,
+     * but the actual variable can't be found when the module is
+     * inserted because it's not an exported symbol.  Do the hideous
+     * thing: use kallsyms_lookup_name(). */
     struct list_head *dmar_drhd_units;
+    struct dmar_drhd_unit *drhd;
 
     dmar_drhd_units = (struct list_head *)kallsyms_lookup_name("dmar_drhd_units");
-
-    dbg("Symbol dmar_drhd_units found at %p", dmar_drhd_units);
-
+    //dbg("Symbol dmar_drhd_units found at %p", dmar_drhd_units);
     if(NULL == dmar_drhd_units) { return -ENODEV; }
-    
+
     /* Can't use for_each_active_iommu or for_each_iommu, because
        dmar_drhd_units is expected to be a global, not a pointer. */
-    list_for_each_entry(drhd, dmar_drhd_units, list) {
-        iommu=drhd->iommu;
-        dbg("drhd found at %p, v2p %x", drhd, virt_to_phys(drhd));
-        dbg("drhd->reg_base_addr %Lx", drhd->reg_base_addr);
-        dbg("drhd->iommu found with value %p, v2p %x", iommu, virt_to_phys(iommu));
-        if(NULL != iommu && 0xffffffff != (uint32_t)iommu) {
-            dbg("iommu->reg  %p, v2p %x", iommu->reg, virt_to_phys(iommu->reg));
-            dbg("iommu->name %s", iommu->name);
+    list_for_each_entry(drhd, dmar_drhd_units, list) {        
+        if(NULL != drhd->iommu && 0xffffffff != (uint32_t)drhd->iommu) {
+            pmen = readl(drhd->iommu->reg + DMAR_PMEN_REG);
+            pmen &= ~DMA_PMEN_EPM;
+            writel(pmen, drhd->iommu->reg + DMAR_PMEN_REG);
+            
+            max_loop = 100; /* XXX Not sure what a sane value might be. */
+            do {
+                pmen = readl(drhd->iommu->reg + DMAR_PMEN_REG);
+                //dbg("Checking DMA_PMEN_PRS: max_loop=%d, pmen=0x%08x", max_loop, pmen);
+                max_loop--;
+            } while((pmen & DMA_PMEN_PRS) && max_loop > 0);
+            
+            if(max_loop <= 0) {
+                rv = -ENODEV;
+            }
         }
     }
 
-    return 0; /* success */
+    return rv;    
+}
+
+int linux_drhd_iommu_dbg(void) {
+    return linux_intel_disable_pmr();
 }
 
 /*

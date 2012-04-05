@@ -166,7 +166,7 @@ static void free_allocations(void) {
     }
 }
 
-int linux_drhd_iommu_dbg(void); /* XXX Experimental hack! */
+int linux_intel_disable_pmr(void); /* XXX Experimental hack! */
 
 static int __init init_flicker(void)
 {
@@ -216,7 +216,7 @@ static int __init init_flicker(void)
   /* XXX Experimental Hack! XXX */
   /* Can we make use of Linux's existing facilities for accessing DRHD
      and DMAR registers without having to reinvent the wheel? */
-  rv = linux_drhd_iommu_dbg();
+  rv = linux_intel_disable_pmr();
 
   assert(0 == rv);
   return rv;
