@@ -166,6 +166,9 @@ static void free_allocations(void) {
     }
 }
 
+int linux_intel_disable_pmr(void); /* XXX Experimental hack! */
+void linux_drhd_iommu_dbg(void); /* intel/iommu.c */
+
 static int __init init_flicker(void)
 {
   int rv = 0;
@@ -183,11 +186,18 @@ static int __init init_flicker(void)
           return rv;
       }
 
-      rv = init_vtd_dmar_ioremappings();
-      if (0 != rv) {
-          error("Unable to allocate ioremappings for VT-d.");
-          return rv;
-      }
+      /**
+       * init_vtd_dmar_ioremappings() is deprecated on Intel x Linux.
+       * It may yet be useful for Windows.
+       */
+      /* rv = init_vtd_dmar_ioremappings(); */
+      /* if (0 != rv) { */
+      /*     error("Unable to allocate ioremappings for VT-d."); */
+      /*     return rv; */
+      /* } */
+
+      /* Print some debug information about VT-d IOMMU, DRHD, PMRs */
+      linux_drhd_iommu_dbg();
   } else {
       /* On AMD, we need to clear the Microcode on all CPUs. This
        * introduces the requirement that this module is loaded before
@@ -226,9 +236,13 @@ static void __exit cleanup_flicker(void)
     dbg("MTRRs failed validation");
   }
 
-  if(0 != cleanup_vtd_dmar_ioremappings()) {
-      error("Error in cleanup_vtd_dmar_ioremappings()");
-  }
+  /**
+   * cleanup_vtd_dmar_ioremappings() is deprecated on Intel x Linux.
+   * It may yet be useful for Windows.
+   */
+  /* if(0 != cleanup_vtd_dmar_ioremappings()) { */
+  /*     error("Error in cleanup_vtd_dmar_ioremappings()"); */
+  /* } */
   
   logit("Flicker module unloaded.");
 }

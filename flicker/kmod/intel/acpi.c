@@ -586,8 +586,15 @@ static void print_drhd_reg(uint64_t dmarr_base) {
  * TODO: Figure out what issues exist on AMD systems, and devise a
  * similar work-around.
  */
-#define DMAR_NUM_PAGES 4 /* number of 4KB pages */
+
+/**
+ * For Intel x Linux, a work-around for hard-coding DMAR_BASE_PHYS has
+ * been found.  See flicker/kmod/intel/iommu.c.  Not deleting this
+ * code yet, as it may prove useful on Windows and/or AMD systems.
+ * However, for the moment it is dead code.
+ */
 #define DMAR_BASE_PHYS 0xfed90000
+#define DMAR_NUM_PAGES 4 /* number of 4KB pages */
 static uint32_t sg_dmar_base_io = 0;
 
 int init_vtd_dmar_ioremappings(void) {

@@ -938,10 +938,16 @@ void amd_do_skinit(void) {
  * END AMD-SPECIFIC FUNCTIONS
  */
 
+int linux_intel_disable_pmr(void); /* XXX Experimental hack! */
+
 int launch_drtm(void) {
     if(get_cpu_vendor() == CPU_VENDOR_INTEL) {
         launch_senter();
-        disable_vtd_pmr();
+        /**
+         * TODO: Contemplate a more general PMR disable mechanism (one
+         * that works for Windows as well, and potentially do
+         * something similar for AMD. */
+        linux_intel_disable_pmr();
     } else {
         amd_do_skinit();
     }
