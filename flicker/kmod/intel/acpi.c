@@ -42,6 +42,7 @@
 #include <asm/io.h> //inw
 #else  // _WIN32
 #include "wintypes.h"
+#define ENOMEM 12
 #endif // _WIN32
 
 #include "acpi.h"
@@ -460,7 +461,7 @@ struct acpi_mcfg *get_acpi_mcfg_table(void)
 
 /* DMA Remapping Registers */
 
-typedef struct __attribute__ ((packed)) {
+struct struct_dmarr_t {
     uint32_t version;
     uint32_t reserved;
     uint64_t capabilities;
@@ -483,7 +484,8 @@ typedef struct __attribute__ ((packed)) {
     uint32_t pmr_low_limit;  /* 32 bits */
     uint64_t pmr_high_base;  /* 64 bits */
     uint64_t pmr_high_limit; /* 64 bits */
-} dmarr_t;
+} __packed;
+typedef struct struct_dmarr_t dmarr_t;
 
 /* Print some of the DMAR DRHD registers starting from reg_base */
 static void print_drhd_reg(uint64_t dmarr_base) {

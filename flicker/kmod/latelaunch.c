@@ -947,7 +947,9 @@ int launch_drtm(void) {
          * TODO: Contemplate a more general PMR disable mechanism (one
          * that works for Windows as well, and potentially do
          * something similar for AMD. */
+#ifndef _WIN32
         linux_intel_disable_pmr();
+#endif /* _WIN32 */
     } else {
         amd_do_skinit();
     }
