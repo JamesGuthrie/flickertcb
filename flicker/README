@@ -177,6 +177,7 @@ FAQ
   HP 8530p laptop  
   HP 8540p laptop
   HP Elite 8100 desktop
+  HP 2540p laptop
 
 : Is Flicker bug-free? :
 
@@ -331,4 +332,15 @@ flicker-0.51 (alpha release for internal testing):
   - add support to explicitly disable VT-d DMAR PMR facility
   - invoke disable_vtd_pmr() immediately following Flicker session,
     before restoring interrupts
-
+flicker-0.52 (alpha release for internal testing):
+  - minor bugfixes
+flicker-0.53 (alpha release for internal testing):
+  - refactor Linux kmod to use existing Linux DMAR capabilities
+  - requires Linux kernel built with CONFIG_DMAR=y
+    and CONFIG_DMAR_DEFAULT_ON not set
+  - Ubuntu 11.04 -generic kernels (2.6.38-13-generic) confirmed to work
+flicker-0.6:
+  - fix build issues on Windows
+  - stability improvements confirmed on Intel, Linux, Ubuntu 11.04
+    (primarily due to 2MB-aligned PAL and explicit disabling
+    of VT-d PMRs after a Flicker session completes)
