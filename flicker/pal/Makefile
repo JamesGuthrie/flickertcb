@@ -14,7 +14,7 @@ OBJCOPY=objcopy
 CFLAGS := -Wall -Werror -O2 -std=gnu99 -m32 -march=i686
 CFLAGS += -fno-builtin -fno-common -fno-strict-aliasing
 CFLAGS += -fomit-frame-pointer
-CFLAGS += -I$(CURDIR)/../include -I$(CURDIR)/../extra -I$(CURDIR)/../tsm
+CFLAGS += -I$(CURDIR)/../include
 CFLAGS += -msoft-float
 CFLAGS += -fno-jump-tables
 CFLAGS += -fno-stack-protector
