@@ -12,6 +12,7 @@ LD=ld
 OBJCOPY=objcopy
 
 CFLAGS := -Wall -Werror -O2 -std=gnu99 -m32 -march=i686
+CFLAGS += -ffreestanding -nostdlib 
 CFLAGS += -fno-builtin -fno-common -fno-strict-aliasing
 CFLAGS += -fomit-frame-pointer
 CFLAGS += -I$(CURDIR)/../include
