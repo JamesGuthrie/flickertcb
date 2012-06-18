@@ -9,6 +9,7 @@ RM=rm -f
 AS=as
 AR=ar
 LD=ld
+OBJCOPY=objcopy
 
 CFLAGS := -Wall -Werror -O2 -std=gnu99 -m32 -march=i686
 CFLAGS += -fno-builtin -fno-common -fno-strict-aliasing
@@ -39,13 +40,12 @@ BUILD_DEPS := $(CURDIR)/Makefile
 
 all: $(TARGET).bin
 
-$(TARGET).bin: $(OBJS) $(TARGET).elf
-	$(LD) $(LDFLAGS) -T $(TARGET_LDS) -N $(OBJS) \
-	    -o $(@D)/$(@F) --oformat binary
-
 $(TARGET).elf: $(OBJS) $(TARGET_LDS)
 	$(LD) $(LDFLAGS) -T $(TARGET_LDS) -N $(OBJS) \
 	    -o $(@D)/$(@F)
+
+$(TARGET).bin: $(TARGET).elf
+	$(OBJCOPY) -O binary $(TARGET).elf $(TARGET).bin
 
 clean:
 	$(RM) $(TARGET).bin $(TARGET).elf $(OBJS)
