@@ -119,12 +119,9 @@ void get_pcr17(void) {
 }
 
 void gdt_debug(void) {
-    uint32_t base;
     uint8_t * gdt_ptr;
 
-    base = slb_base_phys();
-
-    printk("slb_base_phys(): 0x%08x\n", base);
+    printk("slb_base_phys(): 0x%08x\n", slb_base_phys());
     printk("GDT:\n");
 
     gdt_ptr = (uint8_t*)52; /* 4-byte AMD header + 44-byte Intel header; hackish */
