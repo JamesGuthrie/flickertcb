@@ -24,6 +24,10 @@ CFLAGS += -DMIN_LOG_LEVEL=1
 
 AFLAGS += -D__ASSEMBLY__
 
+# necessary to support gcc 64-bit "built-ins" in 32-bit build
+# e.g., undefined reference errors re: __udivdi3 or __umoddi3
+GCC_LIBS := $(shell $(CC) -m32 --print-file-name=libgcc.a)
+
 LDFLAGS	+= -melf_i386
 
 TARGET := $(CURDIR)/pal
@@ -41,7 +45,7 @@ BUILD_DEPS := $(CURDIR)/Makefile
 all: $(TARGET).bin
 
 $(TARGET).elf: $(OBJS) $(TARGET_LDS)
-	$(LD) $(LDFLAGS) -T $(TARGET_LDS) -N $(OBJS) \
+	$(LD) $(LDFLAGS) -T $(TARGET_LDS) -N $(OBJS) $(GCC_LIBS) \
 	    -o $(@D)/$(@F)
 
 $(TARGET).bin: $(TARGET).elf
