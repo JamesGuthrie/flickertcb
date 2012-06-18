@@ -344,3 +344,7 @@ flicker-0.6:
   - stability improvements confirmed on Intel, Linux, Ubuntu 11.04
     (primarily due to 2MB-aligned PAL and explicit disabling
     of VT-d PMRs after a Flicker session completes)
+flicker-0.7:
+  - build successfully with gcc-4.6 on Ubuntu 12.04 LTS
+  - link with libgcc.a to gain 64-bit emulation, etc.
+  - add compiler flags -ffreestanding, -nostdlib

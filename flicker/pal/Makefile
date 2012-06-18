@@ -9,11 +9,13 @@ RM=rm -f
 AS=as
 AR=ar
 LD=ld
+OBJCOPY=objcopy
 
 CFLAGS := -Wall -Werror -O2 -std=gnu99 -m32 -march=i686
+CFLAGS += -ffreestanding -nostdlib 
 CFLAGS += -fno-builtin -fno-common -fno-strict-aliasing
 CFLAGS += -fomit-frame-pointer
-CFLAGS += -I$(CURDIR)/../include -I$(CURDIR)/../extra -I$(CURDIR)/../tsm
+CFLAGS += -I$(CURDIR)/../include
 CFLAGS += -msoft-float
 CFLAGS += -fno-jump-tables
 CFLAGS += -fno-stack-protector
@@ -22,6 +24,10 @@ CFLAGS += -DnotPERFCRIT
 CFLAGS += -DMIN_LOG_LEVEL=1
 
 AFLAGS += -D__ASSEMBLY__
+
+# necessary to support gcc 64-bit "built-ins" in 32-bit build
+# e.g., undefined reference errors re: __udivdi3 or __umoddi3
+GCC_LIBS := $(shell $(CC) -m32 --print-file-name=libgcc.a)
 
 LDFLAGS	+= -melf_i386
 
@@ -39,13 +45,12 @@ BUILD_DEPS := $(CURDIR)/Makefile
 
 all: $(TARGET).bin
 
-$(TARGET).bin: $(OBJS) $(TARGET).elf
-	$(LD) $(LDFLAGS) -T $(TARGET_LDS) -N $(OBJS) \
-	    -o $(@D)/$(@F) --oformat binary
-
 $(TARGET).elf: $(OBJS) $(TARGET_LDS)
-	$(LD) $(LDFLAGS) -T $(TARGET_LDS) -N $(OBJS) \
+	$(LD) $(LDFLAGS) -T $(TARGET_LDS) -N $(OBJS) $(GCC_LIBS) \
 	    -o $(@D)/$(@F)
+
+$(TARGET).bin: $(TARGET).elf
+	$(OBJCOPY) -O binary $(TARGET).elf $(TARGET).bin
 
 clean:
 	$(RM) $(TARGET).bin $(TARGET).elf $(OBJS)
