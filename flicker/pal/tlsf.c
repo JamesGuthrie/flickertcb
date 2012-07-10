@@ -1,12 +1,18 @@
-#include <assert.h>
+//#include <assert.h>
 #include <limits.h>
 #include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 #include <string.h>
+
+#include "util.h"
+#include "printk.h"
 
 #include "tlsf.h"
 #include "tlsfbits.h"
+
+#define tlsf_assert ASSERT
+#define printf printk
 
 /*
 ** Constants.
