@@ -35,54 +35,6 @@
 #include "string.h" /* strlen etc. */
 #include "util.h" /* For perf stuff */
 #include "puttymem.h"
-/* ----------------------------------------------------------------------
- * My own versions of malloc, realloc and free. Because I want
- * malloc and realloc to bomb out and exit the program if they run
- * out of memory, realloc to reliably call malloc if passed a NULL
- * pointer, and free to reliably do nothing if passed a NULL
- * pointer. We can also put trace printouts in, if we need to; and
- * we can also replace the allocator with an ElectricFence-like
- * one.
- */
-
-/* int totalmem = 0; */
-void *safemalloc(size_t n, size_t size)
-{
-    void *p;
-
-#ifdef PERFCRIT
-    struct st_timer_vars tv;
-    start_timer(&tv);
-#endif // PERFCRIT
-
-    	 /*totalmem += size;
-    	 printf("Allocated %d bytes so far\n", totalmem);*/
-    if (n > INT_MAX / size) {
-    	p = NULL;
-    } else {
-    	size *= n;
-    	p = static_malloc(size);
-    }
-
-#ifdef PERFCRIT
-    stop_timer(&tv);
-    update_sum(&g_perf.sum_rsag_malloc, &tv);
-#endif // PERFCRIT
-
-    if (!p) {
-    	return NULL;
-    }
-    return p;
-}
-
-
-void safefree(void *ptr)
-{
-    if (ptr) {
-    	static_free(ptr);
-    }
-}
-
 
 /***********************************************************************
  * Replacements for string.h (see man pages for details)

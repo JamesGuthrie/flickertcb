@@ -37,14 +37,6 @@
 
 #include "malloc.h"
 
-/* #define memset myMemset */
-/* #define memcpy myMemcpy */
-/* #define memmove myMemmove */
-
-#define smalloc(z) safemalloc(z,1)
-#define snmalloc safemalloc
-#define sfree safefree
-
 #ifndef size_t
 typedef unsigned int size_t;
 #endif /* size_t */
@@ -53,17 +45,6 @@ typedef unsigned int size_t;
 #define INT_MAX 0x7FFFFFFF
 #endif
 
-void *safemalloc(size_t, size_t);
-void safefree(void *);
-
-/*
- * Direct use of smalloc within the code should be avoided where
- * possible, in favour of these type-casting macros which ensure
- * you don't mistakenly allocate enough space for one sort of
- * structure and assign it to a different sort of pointer.
- */
-#define snew(type) ((type *)snmalloc(1, sizeof(type)))
-#define snewn(n, type) ((type *)snmalloc((n), sizeof(type)))
 
 /***********************************************************************
  * Replacements for string.h (see man pages for details)
