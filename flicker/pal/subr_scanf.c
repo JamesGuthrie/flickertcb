@@ -45,10 +45,6 @@
 #include "ctype.h"   /* isspace */
 #include "string.h"
 
-#ifndef bcopy
-#define bcopy(src, dest, n) memmove(dest, src, n)
-#endif
-
 #define	BUF		32 	/* Maximum length of numeric string. */
 
 /*
@@ -300,7 +296,7 @@ literal:
 				}
 				nread += sum;
 			} else {
-				bcopy(inp, va_arg(ap, char *), width);
+				memmove(va_arg(ap, char *), inp, width);
 				inr -= width;
 				inp += width;
 				nread += width;
