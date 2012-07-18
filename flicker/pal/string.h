@@ -53,6 +53,13 @@ void    *memcpy(void *dst, const void *src, size_t len);
 int     snprintf(char *buf, size_t size, const char *fmt, ...);
 int     vscnprintf(char *buf, size_t size, const char *fmt, va_list ap);
 unsigned long strtoul(const char *nptr, char **endptr, int base);
+quad_t strtoq(const char *nptr, char **endptr, int base);
+u_quad_t strtouq(const char *nptr, char **endptr, int base);
+
+/* sscanf.c */
+int vsscanf(const char *inp, char const *fmt0, va_list ap);
+int sscanf(const char *ibuf, const char *fmt, ...);
+
 
 static inline void *memset(void *b, int c, size_t len)
 {
