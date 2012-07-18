@@ -38,6 +38,20 @@
 #include <stdint.h>
 #include <stddef.h> /* size_t */
 
+#ifndef QUAD_MAX
+#define QUAD_MAX 0x7fffffffffffffffLL
+#endif
+
+#ifndef QUAD_MIN
+#define QUAD_MIN (-0x7fffffffffffffffLL-1)
+#endif
+
+#ifndef UQUAD_MAX
+#define UQUAD_MAX 0xffffffffffffffffULL
+#endif
+
+#define isascii(c)      (((c) & ~0x7f) == 0)
+
 /* from:
  * http://fxr.watson.org/fxr/source/dist/acpica/acutils.h?v=NETBSD5
 */
