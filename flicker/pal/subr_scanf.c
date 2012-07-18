@@ -34,19 +34,16 @@
  * From: static char sccsid[] = "@(#)strtoul.c	8.1 (Berkeley) 6/4/93";
  */
 
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD: src/sys/kern/subr_scanf.c,v 1.17.30.1.6.1 2010/12/21 17:09:25 kensmith Exp $");
-
-#include <sys/param.h>
-#include <sys/systm.h>
-#include <sys/ctype.h>
-#include <sys/limits.h>
-
-/*
- * Note that stdarg.h and the ANSI style va_start macro is used for both
- * ANSI and traditional C compilers.
+/**
+ * Modified for Flicker, 2012-07-18, jonmccune@cmu.edu
  */
-#include <machine/stdarg.h>
+
+#include <stddef.h>  /* NULL */
+#include <stdbool.h> /* bool */
+#include <stdint.h>  /* uintXX_t */
+#include <stdarg.h>
+#include "ctype.h"   /* isspace */
+#include "string.h"
 
 #define	BUF		32 	/* Maximum length of numeric string. */
 
