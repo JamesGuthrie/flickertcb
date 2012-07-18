@@ -30,13 +30,14 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD: src/sys/libkern/strtoq.c,v 1.6.30.1.6.1 2010/12/21 17:09:25 kensmith Exp $");
+/**
+ * Modified for Flicker, 2012-07-18, jonmccune@cmu.edu
+ */
 
-#include <sys/param.h>
-#include <sys/systm.h>
-#include <sys/ctype.h>
-#include <sys/limits.h>
+#include <sys/types.h>
+
+#include "ctype.h"
+#include "string.h"
 
 /*
  * Convert a string to a quad integer.
