@@ -17,7 +17,7 @@
 
 #ifndef _WIN32
 
-#define dbg(format, arg...) printk(KERN_ALERT "%s(%d) " format "\n" , __FUNCTION__ , __LINE__ , ## arg)
+#define dbg(format, arg...) printk(KERN_ALERT "%s(%d) " format "\n", __FUNCTION__ , __LINE__ , ## arg)
 //#define dbg(format, arg...)
 #define logit(format, arg...) printk(KERN_NOTICE "%s(%d) " format "\n" , __FUNCTION__ , __LINE__ , ## arg)
 #define error(format, arg...) printk(KERN_WARNING "%s(%d) " format "\n" , __FUNCTION__ , __LINE__ , ## arg)
