@@ -362,8 +362,13 @@ static inline void _reverse_copy(uint8_t *out, const uint8_t *in, uint32_t count
 #define TPM_ORD_OIAP                0x0000000A
 #define TPM_ORD_SAVE_STATE          0x00000098
 #define TPM_ORD_GET_RANDOM          0x00000046
+#define TPM_ORD_INCREMENT_COUNTER   0x000000DD
+#define TPM_ORD_READ_COUNTER        0x000000DE
+#define TPM_ORD_GET_TICKS           0x000000F1
 
 #define TPM_TAG_PCR_INFO_LONG       0x0006
+#define TPM_TAG_COUNTER_VALUE       0x000E
+#define TPM_TAG_CURRENT_TICKS       0x0014
 #define TPM_TAG_STORED_DATA12       0x0016
 
 /*
@@ -704,6 +709,16 @@ typedef struct {
    }\
 }
 
+#define LOAD_CURRENT_TICKS(buf, offset, info) \
+    LOAD_INTEGER(buf, offset, (info)->tag);\
+    LOAD_INTEGER(buf, offset, (info)->current_ticks);\
+    LOAD_INTEGER(buf, offset, (info)->tick_rate);\
+    LOAD_BLOB_TYPE(buf, offset, &(info)->tick_nonce);
+
+#define LOAD_COUNTER_VALUE(buf, offset, info) \
+    LOAD_INTEGER(buf, offset, (info)->tag);\
+    LOAD_BLOB(buf, offset, (info)->label, 4);\
+    LOAD_INTEGER(buf, offset, (info)->counter);
 
 #define XOR_BLOB_TYPE(data, pad) {\
     uint32_t i;                                 \
@@ -752,6 +767,26 @@ typedef struct {
     uint32_t                data_size;
 } tpm_nv_data_public_t;
 
+#ifndef _WIN32
+typedef struct __attribute__ ((packed)) {
+#else  // _WIN32
+typedef struct {
+#endif // _WIN32
+    tpm_structure_tag_t tag;
+    uint64_t            current_ticks;
+    uint16_t            tick_rate;
+    tpm_nonce_t         tick_nonce;
+} tpm_current_ticks_t;
+
+#ifndef _WIN32
+typedef struct __attribute__ ((packed)) {
+#else  // _WIN32
+typedef struct {
+#endif // _WIN32
+    tpm_structure_tag_t tag;
+    uint8_t             label[4];
+    uint32_t            counter;
+} tpm_counter_value_t;
 
 
 #ifndef _WIN32
@@ -830,6 +865,36 @@ extern uint32_t tpm_get_capability(
  */
 extern uint32_t tpm_nv_get_info(uint32_t locality, tpm_nv_index_t index,
                                 tpm_nv_data_public_t* info);
+
+/*
+ * tpm_read_current_ticks reads the tick counter
+ * locality     : TPM locality (0 - 4)
+ * ticks    	: Struct to contain the tick counter retrieved
+ * return       : TPM_SUCCESS for success, error code defined as TPM_xxx
+ */
+extern uint32_t tpm_read_current_ticks(uint32_t locality,
+                                tpm_current_ticks_t* ticks);
+
+/*
+ * tpm_read_counter reads a monotonic counter
+ * locality     : TPM locality (0 - 4)
+ * id           : counter id
+ * counter    	: Struct to contain the counter value retrieved
+ * return       : TPM_SUCCESS for success, error code defined as TPM_xxx
+ */
+extern uint32_t tpm_read_counter(uint32_t locality,
+                                uint32_t id, tpm_counter_value_t* counter);
+
+/*
+ * tpm_increment_counter increments a monotonic counter and returns its new value
+ * locality     : TPM locality (0 - 4)
+ * id           : counter id
+ * auth         : counter auth value
+ * counter    	: Struct to contain the counter value retrieved
+ * return       : TPM_SUCCESS for success, error code defined as TPM_xxx
+ */
+extern uint32_t tpm_increment_counter(uint32_t locality, uint32_t id,
+                                tpm_authdata_t const *auth, tpm_counter_value_t* counter);
 
 
 #endif   /* __TPM_H__ */
