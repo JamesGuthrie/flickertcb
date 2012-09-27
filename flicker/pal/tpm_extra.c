@@ -972,3 +972,164 @@ uint32_t tpm_save_state(uint32_t locality)
 
     return ret;
 }
+
+
+extern uint32_t tpm_read_current_ticks(uint32_t locality,
+                                tpm_current_ticks_t* ticks)
+{
+    uint32_t ret, in_size = 0, out_size, offset;
+
+    if ( ticks == NULL)
+        return TPM_BAD_PARAMETER;
+
+    out_size = sizeof(*ticks);
+    ret = tpm_submit_cmd(locality, TPM_ORD_GET_TICKS, in_size, &out_size);
+
+#ifdef TPM_TRACE
+    printk("TPM: read current ticks, return value = %08X\n", ret);
+#endif
+    if ( ret != TPM_SUCCESS ) {
+        printk("TPM: read current ticks, return value = %08X\n", ret);
+        return ret;
+    }
+
+#ifdef TPM_TRACE
+    {
+        printk("TPM: ");
+        print_hex(NULL, WRAPPER_OUT_BUF, out_size);
+    }
+#endif
+
+    offset = 0;
+    LOAD_CURRENT_TICKS(WRAPPER_OUT_BUF, offset, ticks);
+
+    return ret;
+}
+
+extern uint32_t tpm_read_counter(uint32_t locality,
+                                uint32_t id, tpm_counter_value_t* counter)
+{
+    uint32_t ret, in_size, out_size, offset;
+
+    if ( counter == NULL)
+        return TPM_BAD_PARAMETER;
+
+    in_size = 0;
+    UNLOAD_INTEGER(WRAPPER_IN_BUF, in_size, id);
+
+    out_size = sizeof(*counter);
+    ret = tpm_submit_cmd(locality, TPM_ORD_READ_COUNTER, in_size, &out_size);
+
+#ifdef TPM_TRACE
+    printk("TPM: read monotonic counter, return value = %08X\n", ret);
+#endif
+    if ( ret != TPM_SUCCESS ) {
+        printk("TPM: read monotonic counter, return value = %08X\n", ret);
+        return ret;
+    }
+
+#ifdef TPM_TRACE
+    {
+        printk("TPM: ");
+        print_hex(NULL, WRAPPER_OUT_BUF, out_size);
+    }
+#endif
+
+    offset = 0;
+    LOAD_COUNTER_VALUE(WRAPPER_OUT_BUF, offset, counter);
+
+    return ret;
+}
+
+static uint32_t _tpm_increment_counter(uint32_t locality, uint32_t id,
+                                tpm_authdata_t const *auth, tpm_counter_value_t* counter)
+{
+    uint32_t ret;
+    tpm_nonce_t nonce_even, nonce_odd;
+    tpm_authhandle_t hauth;
+    tpm_authdata_t pub_auth;
+    uint8_t cont_session = false;
+    uint32_t offset;
+    uint32_t out_size;
+    uint32_t ordinal = TPM_ORD_INCREMENT_COUNTER;
+    tpm_digest_t digest;
+
+    /* skip generate nonce for odd_osap, just use the random value in stack */
+
+    /* establish a oiap session */
+    ret = tpm_oiap(locality, &hauth, &nonce_even);
+    if ( ret != TPM_SUCCESS )
+            return ret;
+
+    /* calculate authdata */
+    /* in_param_digest = sha1(1S ~ 2S) */
+    offset = 0;
+    UNLOAD_INTEGER(WRAPPER_IN_BUF, offset, ordinal);
+    UNLOAD_INTEGER(WRAPPER_IN_BUF, offset, id);
+    sha1_buffer(WRAPPER_IN_BUF, offset, (uint8_t *)&digest);
+
+    /* authdata = hmac(key, in_param_digest || auth_params1) */
+    offset = 0;
+    UNLOAD_BLOB_TYPE(WRAPPER_IN_BUF, offset, &digest);
+    UNLOAD_BLOB_TYPE(WRAPPER_IN_BUF, offset, &nonce_even);
+    UNLOAD_BLOB_TYPE(WRAPPER_IN_BUF, offset, &nonce_odd);
+    UNLOAD_INTEGER(WRAPPER_IN_BUF, offset, cont_session);
+    hmac((uint8_t *)auth, WRAPPER_IN_BUF, offset,
+         (uint8_t *)&pub_auth);
+
+    offset = 0;
+    UNLOAD_INTEGER(WRAPPER_IN_BUF, offset, id);
+
+    UNLOAD_INTEGER(WRAPPER_IN_BUF, offset, hauth);
+    UNLOAD_BLOB_TYPE(WRAPPER_IN_BUF, offset, &nonce_odd);
+    UNLOAD_INTEGER(WRAPPER_IN_BUF, offset, cont_session);
+    UNLOAD_BLOB_TYPE(WRAPPER_IN_BUF, offset, &pub_auth);
+
+    out_size = WRAPPER_OUT_MAX_SIZE;
+
+    ret = tpm_submit_cmd_auth1(locality, TPM_ORD_INCREMENT_COUNTER, offset, &out_size);
+
+#ifdef TPM_TRACE
+    printk("TPM: increment monotonic counter, return value = %08X\n", ret);
+#endif
+    if ( ret != TPM_SUCCESS ) {
+        printk("TPM: increment monotonic counter, return value = %08X\n", ret);
+        return ret;
+    }
+
+#ifdef TPM_TRACE
+    {
+        printk("TPM: ");
+        print_hex(NULL, WRAPPER_OUT_BUF, out_size);
+    }
+#endif
+
+    offset = 0;
+    LOAD_COUNTER_VALUE(WRAPPER_OUT_BUF, offset, counter);
+
+    return ret;
+}
+
+extern uint32_t tpm_increment_counter(uint32_t locality, uint32_t id,
+                                tpm_authdata_t const *auth, tpm_counter_value_t* counter)
+{
+    uint32_t ret;
+
+    if (counter == NULL  ||  auth == NULL)
+        return TPM_BAD_PARAMETER;
+
+    ret = _tpm_increment_counter(locality, id, auth, counter);
+
+    return ret;
+}
+
+
+/*
+ * Local variables:
+ * mode: C
+ * c-set-style: "BSD"
+ * c-basic-offset: 4
+ * tab-width: 4
+ * indent-tabs-mode: nil
+ * End:
+ */
