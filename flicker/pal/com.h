@@ -33,13 +33,32 @@
  * Portions copyright (c) 2010, Intel Corporation
  */
 
-#include <stdint.h>
-
 /*
  * NS8250... UART registers.
  */
 #ifndef __COM_H__
 #define __COM_H__
+
+/* typical serial port base addresses */
+#define COM1_ADDR        0x3f8
+#define COM2_ADDR        0x2f8
+#define COM3_ADDR        0x3e8
+#define COM4_ADDR        0x2e8
+
+/**
+ * Build-time override of Serial IO base address is supported (useful
+ * for Intel AMT Serial-Over-LAN).
+ */
+#ifdef SERIAL_BASE_OVERRIDE
+#define SERIAL_BASE SERIAL_BASE_OVERRIDE
+#else
+#define SERIAL_BASE COM1_ADDR
+#endif
+
+
+#ifndef __ASSEMBLY__
+
+#include <stdint.h>
 
 /* 8250 registers #[0-6]. */
 
@@ -249,12 +268,6 @@
 #define    EMR_DTRFLW	0x40
 #define    EMR_EFMODE	0x80
 
-/* com port */
-#define COM1_ADDR        0x3f8
-#define COM2_ADDR        0x2f8
-#define COM3_ADDR        0x3e8
-#define COM4_ADDR        0x2e8
-
 #define GET_LCR_DATABIT(x)  ({                              \
             typeof(x) val = 0;                              \
             val = (((x) == 5) ? LCR_5BITS : (val));         \
@@ -302,6 +315,8 @@ typedef struct SERIAL_PORT_T serial_port_t;
 
 extern void comc_init(void);
 extern void comc_puts(const char*, unsigned int);
+
+#endif /* __ASSEMBLY__ */
 
 #endif /* __COM_H__ */
 

@@ -44,7 +44,7 @@
 #define OUTB(add, val)   outb(g_com_port.comc_port + (add), (val))
 #define INB(add)         inb(g_com_port.comc_port + (add))
 
-serial_port_t g_com_port = {115200, 0, 0x3, COM1_ADDR}; /* com1,115200,8n1 */
+serial_port_t g_com_port = {115200, 0, 0x3, SERIAL_BASE}; /* com1,115200,8n1 */
 
 static void comc_putchar(int c)
 {

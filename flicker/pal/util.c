@@ -27,11 +27,10 @@
 #include "params.h" /* for log* stuff */
 #include "string.h" /* vscnprintf */
 #include "printk.h"
+#include "com.h" /* SERIAL_BASE */
 #ifdef _WIN32
 #include "io.h"
 #endif
-
-#define SERIAL_BASE 0x3f8
 
 struct slb_perf_vals g_perf;
 
