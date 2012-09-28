@@ -30,6 +30,8 @@
  * been tested.
  */
 
+#include "com.h" /* SERIAL_BASE */
+
 .macro HexPrintAL
 #ifndef PERFCRIT
       call  reg2hex
@@ -90,7 +92,7 @@
 1:  in (%dx), %al    // read status into AL
     test $0x20, %al  // check for ready
     je 1b            // keep trying
-    mov $0x3f8, %edx // data register for com1
+    mov $SERIAL_BASE, %edx // data register for com1
     mov $0x40, %al   // output an @ character
     out %al, (%dx)
 #endif
@@ -102,7 +104,7 @@
 1:  in (%dx), %al    // read status into AL
     test $0x20, %al  // check for ready
     je 1b            // keep trying
-    mov $0x3f8, %edx // data register for com1
+    mov $SERIAL_BASE, %edx // data register for com1
     mov $0x3f, %al   // output a ? character
     out %al, (%dx)
 #endif
