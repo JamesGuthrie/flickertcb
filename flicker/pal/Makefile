@@ -21,6 +21,7 @@ CFLAGS += -fno-jump-tables
 CFLAGS += -fno-stack-protector
 
 CFLAGS += -DnotPERFCRIT
+CFLAGS += -DSERIAL_BASE_OVERRIDE=0x5050
 CFLAGS += -DMIN_LOG_LEVEL=1
 
 AFLAGS += -D__ASSEMBLY__
