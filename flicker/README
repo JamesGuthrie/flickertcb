@@ -298,6 +298,7 @@ jonmccune@cmu.edu.  Ideally, your email includes a patch.
 - Compensate for the Linux kernel's "lost time" during a Flicker
   session
 - Be more stable
+- Eliminate redundancy in tboot-derived code in kmod and pal
 
 Changelog
 #########
@@ -348,3 +349,10 @@ flicker-0.7:
   - build successfully with gcc-4.6 on Ubuntu 12.04 LTS
   - link with libgcc.a to gain 64-bit emulation, etc.
   - add compiler flags -ffreestanding, -nostdlib
+flicker-0.8 (release candidate):
+  - switch to tlsf-based malloc algorithm for improved performance
+  - add support for sscanf() and dependencies
+  - accept patch from Hal Finney for additional TPM commands for tick & monotonic counters
+  - add support for changing serial port base address at compile-time (enables Intel AMT serial)
+  - minor code cleanup and bug fixes
+  - accept patch from Andrew Paverd to restore MTRR settings inside Flicker environment
