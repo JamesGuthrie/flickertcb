@@ -51,12 +51,17 @@
 void restore_mtrrs(mtrr_state_t *saved_state)
 {
     int ndx;
+    int num_var_mtrrs;
 
     /* disable all MTRRs first */
     set_all_mtrrs(false);
 
+    num_var_mtrrs = saved_state->num_var_mtrrs;
+
     /* physmask's and physbase's */
-    for ( ndx = 0; ndx < saved_state->num_var_mtrrs; ndx++ ) {
+    for ( ndx = 0; ndx < num_var_mtrrs; ndx++ ) {
+        /* Careful, wrmsrl might be interacting with the
+           counter of the for loop */
         wrmsrl(MTRR_PHYS_MASK0_MSR + ndx*2,
                saved_state->mtrr_physmasks[ndx].raw);
         wrmsrl(MTRR_PHYS_BASE0_MSR + ndx*2,
