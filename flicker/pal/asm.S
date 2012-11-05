@@ -310,8 +310,10 @@ cpu_amd:
     movl $(CPU_VENDOR_AMD), %edx
     jmp cpu_common
 
+    /* If Intel CPU, re-enable MTRRs from TXT heap. */
 cpu_intel:
     movl $(CPU_VENDOR_INTEL), %edx
+    call txt_post_launch
     jmp cpu_common
 
     /* Common code from now on */
