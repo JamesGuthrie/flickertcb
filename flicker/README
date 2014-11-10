@@ -78,9 +78,11 @@ Software
 
 You must use a non-PAE Linux kernel.  If your system has multiple
 gigabytes of memory there is a good chance your Linux installer
-configured a PAE kernel.  If the output of `uname -a` includes pae,
-you need to use a different kernel. Multiprocessor systems are
-supported.
+configured a PAE kernel.  If the config used to compile your
+kernel (this can be found in /boot) contains an entry such as
+"CONFIG_X86_PAE=y" then it has PAE enabled, you will most likely
+need to reconfigure and recompile the kernel to disable PAE.
+Multiprocessor systems are supported.
 
 Intel hardware requires a chipset-specific SINIT (aka Authenticated
 Code) module, which can be obtained from the tboot project's web page
