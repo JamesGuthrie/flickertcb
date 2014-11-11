@@ -11,17 +11,19 @@ AR=ar
 LD=ld
 OBJCOPY=objcopy
 
+# This points to the flicker pal directory
+PALDIR := $(CURDIR)/../../pal
+
 CFLAGS := -Wall -Werror -O2 -std=gnu99 -m32 -march=i686
-CFLAGS += -ffreestanding -nostdlib 
+CFLAGS += -ffreestanding -nostdlib
 CFLAGS += -fno-builtin -fno-common -fno-strict-aliasing
 CFLAGS += -fomit-frame-pointer
-CFLAGS += -I$(CURDIR)/../include
+CFLAGS += -I$(PALDIR)
 CFLAGS += -msoft-float
 CFLAGS += -fno-jump-tables
 CFLAGS += -fno-stack-protector
 
 CFLAGS += -DnotPERFCRIT
-CFLAGS += -DSERIAL_BASE_OVERRIDE=0x5050
 CFLAGS += -DMIN_LOG_LEVEL=1
 
 AFLAGS += -D__ASSEMBLY__
@@ -32,9 +34,14 @@ GCC_LIBS := $(shell $(CC) -m32 --print-file-name=libgcc.a)
 
 LDFLAGS	+= -melf_i386
 
-TARGET := $(CURDIR)/pal
-TARGET_LDS := $(CURDIR)/pal.ld
+PAL_C_SRCS := $(wildcard $(PALDIR)/*.c)
+PAL_S_SRCS := $(wildcard $(PALDIR)/*.S)
+PAL_OBJS := $(PAL_S_SRCS:.S=.o) $(PAL_C_SRCS:.c=.o)
 
+BUILD_DEPS := $(CURDIR)/Makefile
+
+TARGET := $(CURDIR)/pal
+TARGET_LDS := $(PALDIR)/pal.ld
 
 C_SRCS := $(wildcard $(CURDIR)/*.c)
 S_SRCS := $(wildcard $(CURDIR)/*.S)
@@ -44,17 +51,23 @@ OBJS := $(S_SRCS:.S=.o) $(C_SRCS:.c=.o)
 
 BUILD_DEPS := $(CURDIR)/Makefile
 
-all: $(OBJS)
+all: $(TARGET).bin
 
-$(TARGET).elf: $(OBJS) $(TARGET_LDS)
-	$(LD) $(LDFLAGS) -T $(TARGET_LDS) -N $(OBJS) $(GCC_LIBS) \
+$(TARGET).elf: $(PAL_OBJS) $(OBJS) $(TARGET_LDS)
+	$(LD) $(LDFLAGS) -T $(TARGET_LDS) -N $(PAL_OBJS) $(OBJS) $(GCC_LIBS) \
 	    -o $(@D)/$(@F)
 
 $(TARGET).bin: $(TARGET).elf
-	$(OBJCOPY) -O binary $(TARGET).elf $(TARGET).bin
+	$(OBJCOPY) -O binary $< $@
 
 clean:
 	$(RM) $(TARGET).bin $(TARGET).elf $(OBJS)
+
+cleanpal: clean
+	make -C $(PALDIR) clean
+
+$(PAL_OBJS):
+	make -C $(PALDIR)
 
 %.o : %.c $(HDRS) $(BUILD_DEPS)
 	$(CC) $(CFLAGS) -c $< -o $@

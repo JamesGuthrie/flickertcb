@@ -103,9 +103,15 @@ cd kmod/
 ln -s Makefile.linux Makefile
 make
 
-Build the pal by invoking 'make' in the pal/ subdirectory.
+Build the pal support code by invoking 'make' in the pal/
+subdirectory.
 
-Cross your fingers and execute ./go.sh.
+Build the example pal by invoking 'make' in apps/example/.
+
+Cross your fingers and execute './apps/go.sh ./apps/example/pal.bin'.
+
+When you're ready to start developing your own pal(s), copy the
+apps/example directory and use this as a template for your own pal.
 
 The source files are reasonably well commented.  Go read the code. :)
 

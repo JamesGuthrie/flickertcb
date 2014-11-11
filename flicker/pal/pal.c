@@ -1,5 +1,5 @@
 /*
- * pal.c: Put code for Flicker PAL here in pal_main()
+ * pal.c: Logic to launch pal_main()
  *
  * Copyright (C) 2006-2011 Jonathan M. McCune
  * All rights reserved.
@@ -47,23 +47,6 @@ uint8_t g_end_of_high __attribute__((section (".slb.end_of_high"), aligned(4)));
 
 extern uint8_t g_mle_header;
 extern uint8_t g_mle_header_end;
-
-/**
- * Code below here is in section .text.slb.  It is part of the actual
- * SLB / MLE that is measured directly by SKINIT /
- * GETSEC[SENTER]. Code not in section .text.slb is measured in
- * software by function hash_trick().
- */
-
-int pal_main(void) __attribute__ ((section (".text.slb")));
-int pal_main(void)
-{
-    printk("Hello from pal_main()\n");
-    stress_malloc();
-
-    return 0;
-}
-
 
 /* The "hash trick" measures and then extends a PCR with the
  * measurement of the "upper" portion of the PAL.  When the PAL is too
@@ -256,6 +239,7 @@ int slb_dowork(uint32_t params) {
     unsigned int base = slb_base_phys();
     int locality = 2;
     void *resume_pts = NULL;
+    extern int pal_main(void);
 
     slb_out_string("entered slb_dowork");
 
