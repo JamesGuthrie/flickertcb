@@ -95,20 +95,17 @@ uniprocessor.
 Executing a Flicker session
 ###########################
 
-Build the kmod in the kmod/ subdirectory.  Note that you need to have
-the headers installed for your kernel.  Investigate 'apt-get install
-linux-headers-[version]' or similar.
+The Makefile in this directory can be used to build the example PAL
+that comes with flicker (Linux only). To do so, run the following
+commands:
 
-cd kmod/
-ln -s Makefile.linux Makefile
-make
+make && make run APP=example
 
-Build the pal support code by invoking 'make' in the pal/
-subdirectory.
-
-Build the example pal by invoking 'make' in apps/example/.
-
-Cross your fingers and execute './apps/go.sh ./apps/example/pal.bin'.
+This will build the code in the kmod/ and pal/ subdirectories, after
+which it builds and links the code in apps/* and runs using the
+pal.bin in the directory specified by the APP environment variable.
+Note that you need to have the headers installed for your kernel.
+Investigate 'apt-get install linux-headers-[version]' or similar.
 
 When you're ready to start developing your own pal(s), copy the
 apps/example directory and use this as a template for your own pal.
