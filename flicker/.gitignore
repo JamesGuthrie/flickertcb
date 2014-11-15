@@ -1,0 +1,12 @@
+# Linux build artifacts
+*.o
+*.o.cmd
+pal.bin
+pal.elf
+*.ko.cmd
+.tmp_versions
+Module.symvers
+flicker.ko
+flicker.mod.c
+kmod/Makefile
+modules.order
